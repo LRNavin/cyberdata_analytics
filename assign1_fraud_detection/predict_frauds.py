@@ -13,6 +13,7 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 
+from sklearn import metrics
 
 src = 'cleaned_data.csv'
 dataset = pd.read_csv(src).as_matrix()
@@ -28,14 +29,21 @@ usy = y_array
 usx = usx.astype(np.float64)
 usy = usy.astype(np.float64)
 
+# Feature Selection - Based on Viz Earlier
+
+usx = usx[:,[0,8]]
+
+print "Shape of feature selected dataset: " + str(usx.shape)
+
 x_train, x_test, y_train, y_test = train_test_split(usx, usy, test_size = 0.2)#test_size: proportion of train/test data
 
 print("Training Beginssssss!!!!!!!")
 print("Trainging Size: " + str(x_train.shape[0]))
 print("Testing Size: " + str(x_test.shape[0]))
+print ("Testing Frauds: " + str(np.sum(y_test)))
 
 #Classifier choice
-classifier_choice = 1
+classifier_choice = 4
 classifiers = [
     neighbors.KNeighborsClassifier(algorithm='kd_tree'),    # ----> 1
     SVC(),                                                  # ----> 2
@@ -69,6 +77,19 @@ precision, recall, thresholds = precision_recall_curve(y_test, y_predict)
 print('Accuracy: ' + str(accuracy_score(y_true=y_test, y_pred=y_predict)))
 print('Precision: '+ str(precision))
 print('Recall: '+ str(recall))
+
+fpr, tpr, thresholds = metrics.roc_curve(y_test, y_predict)
+
+# calculate AUC
+auc = metrics.roc_auc_score(y_test, y_predict)
+print('AUC: %.3f' % auc)
+
+# plot no skill
+plt.plot([0, 1], [0, 1], linestyle='--')
+# plot the roc curve for the model
+plt.plot(fpr, tpr, marker='.')
+# show the plot
+plt.show()
 
 #predict_proba = clf.predict_proba(x_test)#the probability of each smple labelled to positive or negative
 
