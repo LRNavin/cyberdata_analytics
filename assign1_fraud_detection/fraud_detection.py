@@ -15,6 +15,7 @@ from sklearn.metrics import confusion_matrix
 from operator import itemgetter
 from itertools import groupby
 import numpy as np
+from imblearn.over_sampling import SMOTE
 
 
 # In[8]:
@@ -96,7 +97,7 @@ def aggregate_mean(before_aggregate):
 
 
 if __name__ == "__main__":
-    src = 'data_for_student_case.csv'
+    src = 'adyen_data.csv'
     ah = open(src, 'r')
     x = []#contains features
     y = []#contains labels
@@ -242,11 +243,15 @@ usy = usy.astype(np.float64)
 
 x_train, x_test, y_train, y_test = train_test_split(usx, usy, test_size = 0.2)#test_size: proportion of train/test data
 
+
+sm = SMOTE(ratio=1.0)
+x_train_res, y_train_res = sm.fit_sample(x_train, y_train)
+
 print("Training Beginssssss!!!!!!!")
-print(x_train[1,:])
+print(x_train_res[1,:])
 
 clf = neighbors.KNeighborsClassifier(algorithm = 'kd_tree')
-clf.fit(x_train, y_train)
+clf.fit(x_train_res, y_train_res)
 y_predict = clf.predict(x_test)
 for i in range(len(y_predict)):
     if y_test[i]==1 and y_predict[i]==1:
