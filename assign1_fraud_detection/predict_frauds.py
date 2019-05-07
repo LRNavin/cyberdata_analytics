@@ -35,7 +35,7 @@ print("Trainging Size: " + str(x_train.shape[0]))
 print("Testing Size: " + str(x_test.shape[0]))
 
 #Classifier choice
-classifier_choice = 2
+classifier_choice = 1
 classifiers = [
     neighbors.KNeighborsClassifier(algorithm='kd_tree'),    # ----> 1
     SVC(),                                                  # ----> 2
