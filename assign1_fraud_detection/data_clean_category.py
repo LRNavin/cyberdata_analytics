@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import requests
 import json
 
+from imblearn.over_sampling import SMOTE
+
 plt.style.use('ggplot')
 
 
