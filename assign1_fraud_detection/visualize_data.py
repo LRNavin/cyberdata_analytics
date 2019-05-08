@@ -23,21 +23,23 @@ y = dataset[:,-1]
 
 ######################## Dataset column reference with index ########################
 
-# 0 . Amount
-# 1 . Txn Variant Code
-# 2 . Interaction Type
-# 3 . issue Country
+# 0 . Amount - take
+# 1 . Txn Variant Code - hold
+# 2 . Interaction Type - take
+# 3 . issue Country - hold
 # 4 . issuer code - bin
-# 5 . currency code
+# 5 . currency code - hold - take
 # 6 . Shopper Country code
-# 7 . Card Verif Code Supplied?
-# 8 . cvcresponse
+# 7 . Card Verif Code Supplied?  - take
+# 8 . cvcresponse - take
 # 9 . Account code
 # 10 . txnid
 # 11 . mail_id
 # 12 . ip_id
 # 13 . card_id
 # 14 . simple_journal (class label)
+
+# Feature Select - 0,2,5,7,8
 
 ######################## ################################## ########################
 

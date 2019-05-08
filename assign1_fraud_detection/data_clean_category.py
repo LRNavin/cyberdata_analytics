@@ -63,7 +63,9 @@ dataset['issuercountrycode'] = series.cat.codes
 print (dict(enumerate(series.cat.categories)))
 
 #Clean - issuer code - bin
-dataset['bin'] = df["bin"]
+series = df["bin"].astype('category')
+dataset['bin'] = series.cat.codes
+print (dict(enumerate(series.cat.categories)))
 
 #Clean - currency code
 series = df["currencycode"].astype('category')
