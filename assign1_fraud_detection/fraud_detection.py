@@ -8,6 +8,7 @@ import datetime
 import time
 import matplotlib.pyplot as plt
 from sklearn import neighbors
+from sklearn.utils import shuffle
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
@@ -240,11 +241,14 @@ usx = x_array
 usy = y_array
 usx = usx.astype(np.float64)
 usy = usy.astype(np.float64)
+usx, usy = shuffle(usx, usy)
 
-x_train, x_test, y_train, y_test = train_test_split(usx, usy, test_size = 0.2)#test_size: proportion of train/test data
 
+x_train, x_test, y_train, y_test = train_test_split(usx, usy, test_size=0.2, random_state=42)#test_size: proportion of train/test data
 
-sm = SMOTE(ratio=1.0)
+ratios = [0.01, 0.05,  0.1, 0.2, 0.5, 1.0]
+
+sm = SMOTE(ratio=0.01)
 x_train_res, y_train_res = sm.fit_sample(x_train, y_train)
 
 print("Training Beginssssss!!!!!!!")
@@ -253,6 +257,7 @@ print(x_train_res[1,:])
 clf = neighbors.KNeighborsClassifier(algorithm = 'kd_tree')
 clf.fit(x_train_res, y_train_res)
 y_predict = clf.predict(x_test)
+
 for i in range(len(y_predict)):
     if y_test[i]==1 and y_predict[i]==1:
         TP += 1
@@ -262,11 +267,14 @@ for i in range(len(y_predict)):
         FN += 1
     if y_test[i]==0 and y_predict[i]==0:
         TN += 1
+
 print('TP: '+ str(TP))
 print('FP: '+ str(FP))
 print('FN: '+ str(FN))
 print('TN: '+ str(TN))
 #print confusion_matrix(y_test, answear) watch out the element in confusion matrix
 precision, recall, thresholds = precision_recall_curve(y_test, y_predict)
+f_score = (1 + 0.25)*(precision * recall)/(0.25 *precision + recall)
+
 predict_proba = clf.predict_proba(x_test)#the probability of each smple labelled to positive or negative
 
