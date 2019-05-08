@@ -10,11 +10,13 @@ from sklearn.metrics import confusion_matrix
 
 from sklearn import neighbors
 from sklearn.svm import SVC
+from sklearn.utils import shuffle
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.model_selection import cross_val_predict, cross_validate, cross_val_score, StratifiedKFold
 from sklearn import metrics
 from sklearn.preprocessing import OneHotEncoder, normalize
+from sklearn.linear_model import LogisticRegression
 
 from imblearn.over_sampling import SMOTE
 
@@ -92,13 +94,14 @@ print("Training Beginssssss!!!!!!!")
 
 
 #Classifier choice
-classifier_choice = 5
+classifier_choice = 6
 classifiers = [
     neighbors.KNeighborsClassifier(algorithm='kd_tree'),    # ----> 1
     SVC(),                                                  # ----> 2
     DecisionTreeClassifier(),                               # ----> 3
-    RandomForestClassifier(),               # ----> 4
-    AdaBoostClassifier()                    # ----> 5
+    RandomForestClassifier(),                               # ----> 4
+    AdaBoostClassifier(),                                   # ----> 5
+    LogisticRegression(C=400, penalty='l1')                 # ----> 6
     ]
 
 clf = classifiers[classifier_choice-1]
@@ -114,8 +117,10 @@ for i, (train, test) in enumerate(StratifiedKFold(n_splits=10, random_state=25).
     X_test  = usx[test]
     Y_test  = usy[test]
 
+    X_train, Y_train = shuffle(X_train, Y_train)
+
     # Smote Training Dataset
-    sm = SMOTE(ratio=0.5)
+    sm = SMOTE(ratio=0.01)
     X_train, Y_train = sm.fit_resample(X_train, Y_train)
 
     # TRAIN
