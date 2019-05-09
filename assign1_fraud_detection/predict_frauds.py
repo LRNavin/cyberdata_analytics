@@ -23,6 +23,7 @@ from sklearn.neural_network import MLPClassifier
 
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import TomekLinks
+from imblearn.combine import SMOTETomek
 
 def classifier_train(clf, X_train, Y_train, X_test, Y_test):
     clf.fit(X_train, Y_train)
@@ -195,7 +196,8 @@ for i, (train, test) in enumerate(StratifiedKFold(n_splits=10, random_state=25).
     tl = TomekLinks()
     X_train, Y_train = tl.fit_resample(X_train, Y_train)
     # Smote Training Dataset
-    sm = SMOTE(ratio=0.02, random_state=42) # 42 is the answer to the universe, life, and everything
+    # sm = SMOTE(ratio=0.02, random_state=42) # 42 is the answer to the universe, life, and everything
+    sm = SMOTETomek()
     X_train, Y_train = sm.fit_resample(X_train, Y_train)
     print (' -------------------- Done with Under/Over Sampling --------------------')
 

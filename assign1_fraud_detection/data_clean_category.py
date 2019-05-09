@@ -49,7 +49,7 @@ def convert_currency(row):
 dataset = pd.DataFrame()
 
 # Clean - amount
-# dataset['amount'] = df.apply(lambda x: convert_currency(x),axis=1)
+dataset['amount'] = df.apply(lambda x: convert_currency(x),axis=1)
 dataset['amount'] = StandardScaler().fit_transform(dataset['amount'].values.reshape(-1,1))
 
 # Clean - Txn Variant Code
