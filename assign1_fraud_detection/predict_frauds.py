@@ -85,6 +85,113 @@ def hyperParamaterFitter(classifier):
                 best_classifier = classifier
     return best_confusion,best_classifier,best_prob_threshold, best_smote
 
+
+def cross_10_fold(classifier, features, labels, smote_v, threshold):
+    k = KFold(n_splits=10, shuffle=True, random_state=42)
+    TP_final = []
+    FP_final = []
+    TN_final = []
+    FN_final = []
+    AUC_final = []
+    accuracy_final=[]
+    f1_measure_final=[]
+    Recall_final=[]
+    precision_final=[]
+    Y_tests_final = []
+    conf_matrixes = []
+    i = 0
+    for train, test in k.split(features):
+        print ('')
+        print (' -------------------- Fold : ', i, ' --------------------')
+        i = i+1
+        features_train, features_test = features.iloc[train], features.iloc[test]
+        labels_train, labels_test = labels.iloc[train], labels.iloc[test]
+
+        smote = SMOTE(ratio=smote_v, random_state=42)
+        features_oversampling, labels_oversampling = smote.fit_sample(features_train, labels_train)
+
+        # classifier.fit(features_train, labels_train) , Comment out to evaluare for UNSMOTED case
+        classifier.fit(features_oversampling, labels_oversampling)
+        y_scores = classifier.predict_proba(features_test)[:, 1]
+        labels_predicted = y_scores > threshold
+
+        labels_predicted = classifier.predict(features_test)
+        conf_table = confusion_matrix(labels_test, labels_predicted, labels=[1, 0])
+
+        acc = accuracy_score(labels_predicted, labels_test) * 100
+        f1 = f1_score(labels_predicted, labels_test) * 100
+        rec = recall_score(labels_predicted, labels_test) * 100
+        prec = precision_score(labels_predicted, labels_test) * 100
+        conf_matrixes.append(conf_table)
+        Y_tests.append(labels)
+        Y_tests_preds.append(labels_predicted)
+        Y_tests_preds_probabs.append(y_scores)
+        TP = conf_table[0][0]
+        FP = conf_table[1][0]
+        TN = conf_table[1][1]
+        FN = conf_table[0][1]
+
+        labels_predicted_probability = classifier.predict_proba(features_test)[:, 1]
+        AUC = roc_auc_score(labels_test, labels_predicted_probability)
+
+        TP_final.append(TP)
+        FP_final.append(FP)
+        TN_final.append(TN)
+        FN_final.append(FN)
+        AUC_final.append(AUC)
+        accuracy_final.append(acc)
+        f1_measure_final.append(f1)
+        Recall_final.append(rec)
+        precision_final.append(prec)
+        # # Smote Training Dataset
+        # sm = SMOTE(ratio=0.02, random_state=42)  # 42 is the answer to the universe, life, and everything
+        # X_train, Y_train = sm.fit_resample(X_train, Y_train)
+        #
+        # # TRAIN
+        # clf, conf_matrix, Y_pred_probab, Y_pred = classifier_train(clf, X_train, Y_train, X_test, Y_test)
+        # classifiers_array.append(clf)
+        # conf_matrixes.append(conf_matrix)
+        # Y_tests.append(Y_test)
+        # Y_tests_preds.append(Y_pred)
+        # Y_tests_preds_probabs.append(Y_pred_probab)
+    TP_final = np.array(TP_final)
+    FP_final = np.array(FP_final)
+    TN_final = np.array(TN_final)
+    FN_final = np.array(FN_final)
+    AUC_final = np.array(AUC_final)
+    accuracy_final=np.array(accuracy_final)
+    f1_measure_final=np.array(f1_measure_final)
+    recall_final=np.array(Recall_final)
+    precision_final=np.array(precision_final)
+
+    # Confusion Matrices
+    conf_matrix_final = []
+    for i, each in enumerate(conf_matrixes):
+        if i == 0:
+            conf_matrix_final = each.copy()
+        else:
+            conf_matrix_final += each.copy()
+
+    print '\n'
+    print '\n'
+    print (' - - - - - - Final Conf Matrix - - - - - - ')
+    print (conf_matrix_final)
+
+    for i, each in enumerate(Y_tests):
+        Y_tests_final.extend(each.tolist())
+    Y_tests_preds_final = []
+    for i, each in enumerate(Y_tests_preds):
+        Y_tests_preds_final.extend(each.tolist())
+    Y_tests_preds_probabs_final = []
+    for i, each in enumerate(Y_tests_preds_probabs):
+        Y_tests_preds_probabs_final.extend(each[:, 1].tolist())
+
+    print (' - F1 score    : ', np.sum(f1_measure_final))
+    print (' - Precision   : ', np.mean(precision_final))
+    print (' - Recall      : ', np.mean(recall_final))
+    roc_plot(Y_tests_final, Y_tests_preds_final, "ROC-CURVE")
+
+
 # src = 'cleaned_data.csv'
 src = 'df_cleaned.csv'
 ENCODE_FLAG = 0
@@ -123,35 +230,35 @@ features.info()
 # dataset['n_amount'] = StandardScaler().fit_transform(dataset['amount'].values.reshape(-1,1))
 # dataset['n_conv_amount'] = StandardScaler.fit_transform(dataset['con'])
 
-x = dataset[:,:-1]
-y = dataset[:,-1]
-
-TP, FP, FN, TN = 0, 0, 0, 0
-x_array = np.array(x)
-y_array = np.array(y)
-usx = x_array
-usy = y_array
-usx = usx.astype(np.float64)
-usy = usy.astype(np.float64)
+# x = dataset[:,:-1]
+# y = dataset[:,-1]
+#
+# TP, FP, FN, TN = 0, 0, 0, 0
+# x_array = np.array(x)
+# y_array = np.array(y)
+# usx = x_array
+# usy = y_array
+# usx = usx.astype(np.float64)
+# usy = usy.astype(np.float64)
 
 # Feature Selection - Based on Viz Earlier
-if ENCODE_FLAG:
-    encode_x = usx[:,[1,2,7,8]]
-    usx = usx[:,[0]]
-    # usx = normalize(usx)
-
-    enc = OneHotEncoder(handle_unknown='ignore').fit(encode_x)
-    encode_x = enc.transform(encode_x).toarray()
-    usx = np.concatenate((usx, encode_x), axis=1)
-
-else:
-    usx = usx[:, [0,1,2,3,4,7,8]]
+# if ENCODE_FLAG:
+#     encode_x = usx[:,[1,2,7,8]]
+#     usx = usx[:,[0]]
+#     # usx = normalize(usx)
+#
+#     enc = OneHotEncoder(handle_unknown='ignore').fit(encode_x)
+#     encode_x = enc.transform(encode_x).toarray()
+#     usx = np.concatenate((usx, encode_x), axis=1)
+#
+# else:
+#     usx = usx[:, [0,1,2,3,4,7,8]]
 
 
 #Normalize features
 # usx = normalize(usx)
 
-print "Shape of feature selected dataset: " + str(usx.shape)
+# print "Shape of feature selected dataset: " + str(usx.shape)
 print("Training Beginssssss!!!!!!!")
 
 
@@ -168,64 +275,66 @@ classifiers = [
 
 clf = classifiers[classifier_choice-1]
 
-(tn, fp, fn, tp),best_classifier, BestThreshold, best_smote = hyperParamaterFitter(clf)
-print ((tn, fp, fn, tp))
-print best_classifier
-print BestThreshold
-print best_smote
+# (tn, fp, fn, tp),best_classifier, BestThreshold, best_smote = hyperParamaterFitter(clf)
+# print ((tn, fp, fn, tp))
+# print best_classifier
+# print BestThreshold
+# print best_smote
 
-# x_train, x_test, y_train, y_test = train_test_split(usx, usy, test_size = 0.2)#test_size: proportion of train/test data
-for i, (train, test) in enumerate(StratifiedKFold(n_splits=10, random_state=25).split(usx, usy)):
-    print ('')
-    print (' -------------------- Fold : ', i, ' --------------------')
+cross_10_fold(clf,features,labels,0.2,0.6)
 
-    X_train = usx[train]
-    Y_train = usy[train]
-    X_test  = usx[test]
-    Y_test  = usy[test]
-
-    X_train, Y_train = shuffle(X_train, Y_train)
-
-    # Smote Training Dataset
-    sm = SMOTE(ratio=0.02, random_state=42) # 42 is the answer to the universe, life, and everything
-    X_train, Y_train = sm.fit_resample(X_train, Y_train)
-
-    # TRAIN
-    clf, conf_matrix, Y_pred_probab, Y_pred = classifier_train(clf, X_train, Y_train, X_test, Y_test)
-    classifiers_array.append(clf)
-    conf_matrixes.append(conf_matrix)
-    Y_tests.append(Y_test)
-    Y_tests_preds.append(Y_pred)
-    Y_tests_preds_probabs.append(Y_pred_probab)
-
-# Confusion Matrices
-conf_matrix_final = []
-for i, each in enumerate(conf_matrixes):
-    if i == 0:
-        conf_matrix_final = each.copy()
-    else:
-        conf_matrix_final += each.copy()
-
-print '\n'
-print '\n'
-print (' - - - - - - Final Conf Matrix - - - - - - ')
-print (conf_matrix_final)
-
-# ROC-CURVEs
-Y_tests_final = []
-for i, each in enumerate(Y_tests):
-    Y_tests_final.extend(each.tolist())
-Y_tests_preds_final = []
-for i, each in enumerate(Y_tests_preds):
-    Y_tests_preds_final.extend(each.tolist())
-Y_tests_preds_probabs_final = []
-for i, each in enumerate(Y_tests_preds_probabs):
-    Y_tests_preds_probabs_final.extend(each[:, 1].tolist())
-
-print (' - F1 score    : ', round(metrics.f1_score(Y_tests_final, Y_tests_preds_final, pos_label=1), 3))
-print (' - Precision   : ', round(metrics.precision_score(Y_tests_final, Y_tests_preds_final, pos_label=1), 3))
-print (' - Recall      : ', round(metrics.recall_score(Y_tests_final, Y_tests_preds_final, pos_label=1), 3))
-roc_plot(Y_tests_final, Y_tests_preds_final, "FIX TITLE")
+# # x_train, x_test, y_train, y_test = train_test_split(usx, usy, test_size = 0.2)#test_size: proportion of train/test data
+# for i, (train, test) in enumerate(StratifiedKFold(n_splits=10, random_state=25).split(usx, usy)):
+#     print ('')
+#     print (' -------------------- Fold : ', i, ' --------------------')
+#
+#     X_train = usx[train]
+#     Y_train = usy[train]
+#     X_test  = usx[test]
+#     Y_test  = usy[test]
+#
+#     X_train, Y_train = shuffle(X_train, Y_train)
+#
+#     # Smote Training Dataset
+#     sm = SMOTE(ratio=0.02, random_state=42) # 42 is the answer to the universe, life, and everything
+#     X_train, Y_train = sm.fit_resample(X_train, Y_train)
+#
+#     # TRAIN
+#     clf, conf_matrix, Y_pred_probab, Y_pred = classifier_train(clf, X_train, Y_train, X_test, Y_test)
+#     classifiers_array.append(clf)
+#     conf_matrixes.append(conf_matrix)
+#     Y_tests.append(Y_test)
+#     Y_tests_preds.append(Y_pred)
+#     Y_tests_preds_probabs.append(Y_pred_probab)
+#
+# # Confusion Matrices
+# conf_matrix_final = []
+# for i, each in enumerate(conf_matrixes):
+#     if i == 0:
+#         conf_matrix_final = each.copy()
+#     else:
+#         conf_matrix_final += each.copy()
+#
+# print '\n'
+# print '\n'
+# print (' - - - - - - Final Conf Matrix - - - - - - ')
+# print (conf_matrix_final)
+#
+# # ROC-CURVEs
+# Y_tests_final = []
+# for i, each in enumerate(Y_tests):
+#     Y_tests_final.extend(each.tolist())
+# Y_tests_preds_final = []
+# for i, each in enumerate(Y_tests_preds):
+#     Y_tests_preds_final.extend(each.tolist())
+# Y_tests_preds_probabs_final = []
+# for i, each in enumerate(Y_tests_preds_probabs):
+#     Y_tests_preds_probabs_final.extend(each[:, 1].tolist())
+#
+# print (' - F1 score    : ', round(metrics.f1_score(Y_tests_final, Y_tests_preds_final, pos_label=1), 3))
+# print (' - Precision   : ', round(metrics.precision_score(Y_tests_final, Y_tests_preds_final, pos_label=1), 3))
+# print (' - Recall      : ', round(metrics.recall_score(Y_tests_final, Y_tests_preds_final, pos_label=1), 3))
+# roc_plot(Y_tests_final, Y_tests_preds_final, "FIX TITLE")
 
 # y_predict = cross_val_predict(clf, x_train, y_train, cv=10)
 
