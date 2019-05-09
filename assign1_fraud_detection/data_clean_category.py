@@ -1,6 +1,7 @@
 # import packages
 # from google.colab import drive
 
+import os
 import seaborn as sns
 import datetime
 import time
@@ -11,6 +12,7 @@ import requests
 import json
 
 from imblearn.over_sampling import SMOTE
+from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import StandardScaler
 
 plt.style.use('ggplot')
@@ -27,6 +29,10 @@ df = pd.read_csv(src)
 df = df[df['simple_journal']!='Refused']
 
 df['creationdate'] = pd.to_datetime(df['creationdate'],format='%Y-%m-%d %H:%M:%S')
+# df['creation_date'] = pd.to_datetime(df['creationdate'],format='%Y-%m-%d %H:%M:%S')
+# df['creation_month'] = df.creation_date.dt.month
+# df['creation_weekday'] = df.creation_date.dt.weekday
+# df['creation_day'] = df.creation_date.dt.date
 
 url = 'https://api.exchangerate-api.com/v4/latest/EUR'
 response = requests.get(url)
@@ -43,8 +49,8 @@ def convert_currency(row):
 dataset = pd.DataFrame()
 
 # Clean - amount
-dataset['amount'] = df.apply(lambda x: convert_currency(x),axis=1)
-dataset['amount'] = StandardScaler().fit_transform(dataset['amount'].values.reshape(-1, 1))
+# dataset['amount'] = df.apply(lambda x: convert_currency(x),axis=1)
+dataset['amount'] = StandardScaler().fit_transform(dataset['amount'].values.reshape(-1,1))
 
 # Clean - Txn Variant Code
 series = df["txvariantcode"].astype('category')
@@ -115,6 +121,16 @@ data_array = dataset.as_matrix()
 np.savetxt("cleaned_data.csv", data_array, delimiter=",")
 
 
+# Take 2 with DF
+categorical=['issuercountrycode', 'txvariantcode', 'currencycode', 'shoppercountrycode', 'shopperinteraction',
+               'cardverificationcodesupplied', 'cvcresponsecode', 'accountcode']
+for col in categorical:
+    df[col] = df[col].astype('category')
+
+df['convertedAmount'] = df.apply(lambda x: convert_currency(x),axis=1)
+df['convertedAmount'] = StandardScaler().fit_transform(df['amount'].values.reshape(-1,1))
+
+df.to_csv(index=False,path_or_buf=os.getcwd()+'/df_cleaned.csv')
 
 #Data Explore - Navin
 # fraud_data  = df_clean[df_clean.label == 1]
