@@ -33,11 +33,12 @@ y = dataset[:,-1]
 # 7 . Card Verif Code Supplied?  - take
 # 8 . cvcresponse - take
 # 9 . Account code
-# 10 . txnid
-# 11 . mail_id
-# 12 . ip_id
-# 13 . card_id
-# 14 . simple_journal (class label)
+# 10. creation_month - take
+# 11 . txnid
+# 12 . mail_id
+# 13 . ip_id
+# 14 . card_id
+# 15 . simple_journal (class label)
 
 # Feature Select - 0,2,5,7,8
 

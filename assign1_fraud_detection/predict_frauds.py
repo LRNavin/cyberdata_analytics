@@ -17,9 +17,10 @@ from sklearn.model_selection import cross_val_predict, cross_validate, cross_val
 from sklearn import metrics
 from sklearn.preprocessing import OneHotEncoder, normalize
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
 
 from imblearn.over_sampling import SMOTE
-
+from imblearn.under_sampling import TomekLinks
 
 def classifier_train(clf, X_train, Y_train, X_test, Y_test):
     clf.fit(X_train, Y_train)
@@ -51,7 +52,7 @@ def roc_plot(Y_test, Y_pred, title=''):
 
 
 src = 'cleaned_data.csv'
-ENCODE_FLAG = 0
+ENCODE_FLAG = 1
 
 classifiers_array = []
 conf_matrixes = []
@@ -72,9 +73,11 @@ usy = y_array
 usx = usx.astype(np.float64)
 usy = usy.astype(np.float64)
 
+features_array = [0,1,2,3,5,6,7,8,9,10]
+
 # Feature Selection - Based on Viz Earlier
 if ENCODE_FLAG:
-    encode_x = usx[:,[1,2,7,8]]
+    encode_x = usx[:,features_array[1:]]
     usx = usx[:,[0]]
     # usx = normalize(usx)
 
@@ -83,8 +86,7 @@ if ENCODE_FLAG:
     usx = np.concatenate((usx, encode_x), axis=1)
 
 else:
-    usx = usx[:, [0,1,2,7,8]]
-
+    usx = usx[:, features_array]
 
 #Normalize features
 # usx = normalize(usx)
@@ -94,14 +96,16 @@ print("Training Beginssssss!!!!!!!")
 
 
 #Classifier choice
-classifier_choice = 6
+classifier_choice = 5
 classifiers = [
     neighbors.KNeighborsClassifier(algorithm='kd_tree'),    # ----> 1
     SVC(),                                                  # ----> 2
     DecisionTreeClassifier(),                               # ----> 3
     RandomForestClassifier(),                               # ----> 4
     AdaBoostClassifier(),                                   # ----> 5
-    LogisticRegression(C=400, penalty='l1')                 # ----> 6
+    LogisticRegression(C=400, penalty='l1'),                # ----> 6
+    # MLPClassifier(solver='adam', alpha=1e-2)                # ----> 7
+
     ]
 
 clf = classifiers[classifier_choice-1]
@@ -119,9 +123,14 @@ for i, (train, test) in enumerate(StratifiedKFold(n_splits=10, random_state=25).
 
     X_train, Y_train = shuffle(X_train, Y_train)
 
+    # Under Sampling - Tomek removal
+    tl = TomekLinks()
+    X_train, Y_train = tl.fit_resample(X_train, Y_train)
     # Smote Training Dataset
-    sm = SMOTE(ratio=0.01)
+    sm = SMOTE(ratio=0.5)
     X_train, Y_train = sm.fit_resample(X_train, Y_train)
+    print (' -------------------- Done with Under/Over Sampling --------------------')
+
 
     # TRAIN
     clf, conf_matrix, Y_pred_probab, Y_pred = classifier_train(clf, X_train, Y_train, X_test, Y_test)
