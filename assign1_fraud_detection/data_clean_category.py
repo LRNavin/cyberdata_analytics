@@ -132,22 +132,4 @@ df['convertedAmount'] = StandardScaler().fit_transform(df['amount'].values.resha
 
 df.to_csv(index=False,path_or_buf=os.getcwd()+'/df_cleaned.csv')
 
-#Data Explore - Navin
-# fraud_data  = df_clean[df_clean.label == 1]
-# benign_data = df_clean[df_clean.label == 0]
-#
-# print(np.mean(fraud_data.amount))
-# print(np.mean(benign_data.amount))
-#
-# print(np.max(fraud_data.amount))
-# print(np.max(benign_data.amount))
-#
-# print(df_clean.keys())
-# print(df_clean["cvcresponsecode"].unique())
-# sns.boxplot(x=df_clean["label"], y=df_clean["cvcresponsecode"])
-# sns.boxplot(x=df_clean["label"], y=df_clean["amount"])
-
-
-
-
 
