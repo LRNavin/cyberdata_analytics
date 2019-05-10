@@ -105,7 +105,7 @@ def cross_10_fold(classifier, features, labels, smote_v, threshold):
     for train, test in k.split(features):
 
         print ('')
-        print (' -------------------- Fold : ', i, ' --------------------')
+        print (' -------------------- Fold : ', i, ' -------------------- ')
         i = i+1
         features_train, features_test = features.iloc[train], features.iloc[test]
         labels_train, labels_test = labels.iloc[train], labels.iloc[test]
@@ -113,12 +113,10 @@ def cross_10_fold(classifier, features, labels, smote_v, threshold):
         smote = SMOTE(ratio=smote_v, random_state=42)
         features_oversampling, labels_oversampling = smote.fit_sample(features_train, labels_train)
 
-        # classifier.fit(features_train, labels_train) , Comment out to evaluare for UNSMOTED case
         classifier.fit(features_oversampling, labels_oversampling)
         y_scores = classifier.predict_proba(features_test)[:, 1]
-        labels_predicted = y_scores > threshold
-
         labels_predicted = classifier.predict(features_test)
+
         conf_table = confusion_matrix(labels_test, labels_predicted, labels=[1, 0])
 
         acc = accuracy_score(labels_predicted, labels_test) * 100
@@ -146,17 +144,7 @@ def cross_10_fold(classifier, features, labels, smote_v, threshold):
         f1_measure_final.append(f1)
         Recall_final.append(rec)
         precision_final.append(prec)
-        # # Smote Training Dataset
-        # sm = SMOTE(ratio=0.02, random_state=42)  # 42 is the answer to the universe, life, and everything
-        # X_train, Y_train = sm.fit_resample(X_train, Y_train)
-        #
-        # # TRAIN
-        # clf, conf_matrix, Y_pred_probab, Y_pred = classifier_train(clf, X_train, Y_train, X_test, Y_test)
-        # classifiers_array.append(clf)
-        # conf_matrixes.append(conf_matrix)
-        # Y_tests.append(Y_test)
-        # Y_tests_preds.append(Y_pred)
-        # Y_tests_preds_probabs.append(Y_pred_probab)
+
     TP_final = np.array(TP_final)
     FP_final = np.array(FP_final)
     TN_final = np.array(TN_final)
@@ -185,9 +173,9 @@ def cross_10_fold(classifier, features, labels, smote_v, threshold):
     Y_tests_preds_final = []
     for i, each in enumerate(Y_tests_preds):
         Y_tests_preds_final.extend(each.tolist())
-    Y_tests_preds_probabs_final = []
-    for i, each in enumerate(Y_tests_preds_probabs):
-        Y_tests_preds_probabs_final.extend(each[:, 1].tolist())
+    # Y_tests_preds_probabs_final = []
+    # for i, each in enumerate(Y_tests_preds_probabs):
+        # Y_tests_preds_probabs_final.extend(each[:, 1].tolist())
 
     print (' - F1 score    : ', np.sum(f1_measure_final))
     print (' - Precision   : ', np.mean(precision_final))
@@ -244,7 +232,6 @@ features.info()
 # usx = usx.astype(np.float64)
 # usy = usy.astype(np.float64)
 
-features_array = [0,1,2,3,5,6,7,8,9,10]
 
 # Feature Selection - Based on Viz Earlier
 # if ENCODE_FLAG:
